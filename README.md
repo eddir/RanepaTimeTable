@@ -6,7 +6,7 @@
 2. Настройте виртуальное окружение
 
 ```bash
-python -m venv venv
+virtualenv venv
 ```
 
 3. Установите зависимости
