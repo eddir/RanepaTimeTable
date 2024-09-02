@@ -13,25 +13,23 @@ const calendarUrl = "https://timetable.rostkov.me/c";
 
 ## УЦП-23
 
-1. Перейдите на [страницу установки календаря](https://calendar.yandex.ru/import).
-2. Выберите "По ссылке"
-3. Введите адрес календаря:
+1. Перейдите на [страницу установки календаря](https://calendar.yandex.ru/week?sidebar=addFeed).
+2. Введите адрес календаря:
 
 ```plaintext-vue
 {{ calendarUrl }}/timetable.ics
 ```
 
-4. Нажмите "Добавить".
+3. Нажмите "Создать".
 
 ## УЦП-24
 
-1. Перейдите на [страницу установки календаря](https://calendar.yandex.ru/import).
-2. Выберите "По ссылке"
-3. Введите адрес календаря:
+1. Перейдите на [страницу установки календаря](https://calendar.yandex.ru/week?sidebar=addFeed).
+2. Введите адрес календаря:
 
 ```plaintext-vue
 {{ calendarUrl }}/up24.ics
 ```
 
-4. Нажмите "Добавить".
+3. Нажмите "Создать".
 
