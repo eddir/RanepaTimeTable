@@ -1,6 +1,8 @@
 import sys
 from datetime import datetime, timedelta
+from time import sleep
 
+import yaml
 import requests
 import dateutil.tz
 from icalendar import Calendar, Event
@@ -36,7 +38,7 @@ def parse(url: str, sheet_id: str) -> list:
         "sharing_token": f"%22{token}%22"
     })['data']['object_id']
 
-    table_data = api_call(base_url + "/d/s/" + account_id + "/webapi/entry.cgi/SYNO.Office.Sheet.Snapshot", {
+    table_data = api_call(f"{base_url}/d/s/{account_id}/webapi/entry.cgi/SYNO.Office.Sheet.Snapshot", {
         "api": "SYNO.Office.Sheet.Snapshot",
         "method": "get",
         "version": "1",
@@ -138,15 +140,22 @@ def get_hours(index):
         [[19, 00], [20, 30]], [[20, 40], [22, 10]],  # Friday
         [[11, 00], [12, 30]], [[12, 40], [14, 10]], [[14, 20], [15, 50]]  # Saturday
     ]
-    return times[index-1]
+    return times[index - 1]
 
 
-def run(file_url, sheet_id, file_name):
-    timetable = parse(file_url, sheet_id)
-    save_ical(timetable, file_name)
+def load_config(config_file='config.yaml'):
+    with open(config_file, 'r', encoding='utf-8') as file:
+        return yaml.safe_load(file)
 
-    print('Расписание сохранено')
+
+def run(config_file='config.yaml'):
+    config = load_config(config_file)
+    for source in config['sources']:
+        timetable = parse(source['file_url'], source['sheet_id'])
+        save_ical(timetable, source['file_name'])
+        print(f'Расписание сохранено в файл {source["file_name"]}')
+        sleep(2)
 
 
 if __name__ == '__main__':
-    run(file_url=sys.argv[1], sheet_id=sys.argv[2], file_name=sys.argv[3])
+    run()
