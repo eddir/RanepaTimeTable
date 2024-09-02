@@ -9,7 +9,7 @@ from icalendar import Calendar, Event
 from requests.utils import dict_from_cookiejar
 
 
-def parse(url: str, sheet_id: str) -> list:
+def parse(url: str, sheet_id: str):
     session = requests.session()
     token_response = session.get(url)
 
@@ -45,9 +45,9 @@ def parse(url: str, sheet_id: str) -> list:
         "password": "%22%22",
         "object_id": f"%22{object_id}%22",
         "sharing_token": f"%22{token}%22"
-    })['data'][sheet_id]['cells']
+    })['data'][sheet_id]
 
-    return dict_to_list(table_data)
+    return dict_to_list(table_data['cells']), table_data['mergeCells']
 
 
 def api_call(url: str, params: dict) -> dict:
@@ -80,18 +80,22 @@ def dict_to_list(d):
         return d
 
 
-def save_ical(timetable: list, filename='timetable.ics'):
+def save_ical(timetable: list, filename='timetable.ics', merged_hours: list = None):
     cal = Calendar()
 
     for w in range(3, len(timetable), 1):
         for h in range(1, 14):  # колонки B-N
-            add_event(cal, timetable, w, h)
+            add_event(cal, timetable, w, h, merged=is_merged(merged_hours, w, h))
 
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(cal.to_ical().decode('utf-8').replace('\r\n', '\n').strip())
 
 
-def add_event(cal, timetable, week, hour):
+def is_merged(merged_hours, week, hour):
+    return any(h[0] == week and h[1] == hour for h in merged_hours)
+
+
+def add_event(cal, timetable, week, hour, merged=False):
     lesson = timetable[week][hour]
 
     if lesson is None or 'v' not in lesson or not lesson['v'] or not isinstance(lesson['v'], str):
@@ -101,8 +105,11 @@ def add_event(cal, timetable, week, hour):
         return
 
     t = get_hours(hour)
-    i = get_date_cell_for_hour(hour)
 
+    if merged:
+        t[1] = get_hours(hour + 1)[1]
+
+    i = get_date_cell_for_hour(hour)
     week -= 1
 
     for _ in range(3):
@@ -151,8 +158,8 @@ def load_config(config_file='config.yaml'):
 def run(config_file='config.yaml'):
     config = load_config(config_file)
     for source in config['sources']:
-        timetable = parse(source['file_url'], source['sheet_id'])
-        save_ical(timetable, source['file_name'])
+        timetable, merged_hours = parse(source['file_url'], source['sheet_id'])
+        save_ical(timetable, source['file_name'], merged_hours)
         print(f'Расписание сохранено в файл {source["file_name"]}')
         sleep(2)
 

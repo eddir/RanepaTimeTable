@@ -2,3 +2,6 @@ sources:
   - file_url: "https://netospace.ru/drive/d/s/zr6nlE5FI9aNM96YG7v9C0BBJ2cSnYdf/U7yj3Po4cSeCqJYmwrzuQkI1WHwMsqV7-Pb4gmWwEnws"
     sheet_id: "sh_2"
     file_name: "timetable.ics"
+  - file_url: "https://netospace.ru/drive/d/s/zhF9FTyXflzN9SGqgfurBq3Me4zVD7Rg/STJayAlKOYHmuyC8fwZ6jkK_tMhnre_4-ur7g_wA-lws"
+    sheet_id: "sh_2"
+    file_name: "up_2024.ics"
