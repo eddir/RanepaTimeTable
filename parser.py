@@ -1,3 +1,4 @@
+import sys
 from datetime import datetime, timedelta
 
 import requests
@@ -5,12 +6,8 @@ import dateutil.tz
 from icalendar import Calendar, Event
 from requests.utils import dict_from_cookiejar
 
-FILE_URL = ('https://netospace.ru/drive/d/s/'
-            'zr6nlE5FI9aNM96YG7v9C0BBJ2cSnYdf/U7yj3Po4cSeCqJYmwrzuQkI1WHwMsqV7-Pb4gmWwEnws')
-SHEET_ID = 'sh_2'
 
-
-def parse(url=FILE_URL, sheet_id=SHEET_ID) -> list:
+def parse(url: str, sheet_id: str) -> list:
     session = requests.session()
     token_response = session.get(url)
 
@@ -92,8 +89,8 @@ def save_ical(timetable: list, filename='timetable.ics'):
         f.write(cal.to_ical().decode('utf-8').replace('\r\n', '\n').strip())
 
 
-def add_event(cal, timetable, w, h):
-    lesson = timetable[w][h]
+def add_event(cal, timetable, week, hour):
+    lesson = timetable[week][hour]
 
     if lesson is None or 'v' not in lesson or not lesson['v'] or not isinstance(lesson['v'], str):
         return
@@ -101,23 +98,35 @@ def add_event(cal, timetable, w, h):
     if any(word in lesson['v'].lower() for word in ['праздник', 'выходной', 'каникулы', 'сессия']):
         return
 
-    t = get_hours(h)
-    i = h if h % 2 != 0 else h - 1
-    v = w - 1
+    t = get_hours(hour)
+    i = get_date_cell_for_hour(hour)
 
-    while (timetable[v][i] is None or
-           'v' not in timetable[v][i] or
-           not isinstance(timetable[v][i]['v'], int)):
-        v -= 1
+    week -= 1
+
+    for _ in range(3):
+        if is_date_value(timetable[week][i]):
+            break
+        week -= 1
+    else:
+        return
 
     start_date = datetime(1900, 1, 1, tzinfo=dateutil.tz.tzstr("Europe/Moscow"))
-    date = start_date + timedelta(days=int(timetable[v][i]['v']) - 2)
+    date = start_date + timedelta(days=int(timetable[week][i]['v']) - 2)
 
     event = Event()
     event.add('summary', lesson['v'])
     event.add('dtstart', date.replace(hour=t[0][0], minute=t[0][1]))
     event.add('dtend', date.replace(hour=t[1][0], minute=t[1][1]))
     cal.add_component(event)
+
+
+def get_date_cell_for_hour(h):
+    saturday = 11
+    return saturday if h >= saturday else h if h % 2 != 0 else h - 1
+
+
+def is_date_value(lesson):
+    return 'v' in lesson and isinstance(lesson['v'], int)
 
 
 def get_hours(index):
@@ -129,15 +138,15 @@ def get_hours(index):
         [[19, 00], [20, 30]], [[20, 40], [22, 10]],  # Friday
         [[11, 00], [12, 30]], [[12, 40], [14, 10]], [[14, 20], [15, 50]]  # Saturday
     ]
-    return times[index]
+    return times[index-1]
 
 
-def run():
-    timetable = parse()
-    save_ical(timetable)
+def run(file_url, sheet_id, file_name):
+    timetable = parse(file_url, sheet_id)
+    save_ical(timetable, file_name)
 
     print('Расписание сохранено')
 
 
 if __name__ == '__main__':
-    run()
+    run(file_url=sys.argv[1], sheet_id=sys.argv[2], file_name=sys.argv[3])
