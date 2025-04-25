@@ -1,10 +1,9 @@
-import sys
 from datetime import datetime, timedelta
 from time import sleep
 
-import yaml
-import requests
 import dateutil.tz
+import requests
+import yaml
 from icalendar import Calendar, Event
 from requests.utils import dict_from_cookiejar
 
@@ -124,9 +123,18 @@ def add_event(cal, timetable, week, hour, merged=False):
 
     event = Event()
     event.add('summary', lesson['v'])
+    event.add('description', get_description_request_for_feedback())
     event.add('dtstart', date.replace(hour=t[0][0], minute=t[0][1]))
     event.add('dtend', date.replace(hour=t[1][0], minute=t[1][1]))
     cal.add_component(event)
+
+
+def get_description_request_for_feedback():
+    return """📝 Помоги улучшить календарь!
+Сервису timetable.rostkov.me исполнился год 🎉
+Я заканчиваю магистратуру и хочу понять, нужен ли он другим.
+Пожалуйста, ответь на пару вопросов — это займёт всего минуту и очень поможет 🙏
+👉 https://forms.gle/bubTY6oeuDAM7Nnt5"""
 
 
 def get_date_cell_for_hour(h):
